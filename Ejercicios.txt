@@ -1,0 +1,138 @@
+EJERCICIO 1  ---Retorne un Saludo Personalizado---
+
+CREATE OR REPLACE FUNCTION saludar(nombre TEXT)
+RETURNS TEXT AS $$
+    SELECT 'Hola, ' || nombre || '!';
+$$ LANGUAGE sql;
+
+
+EJERCICIO 2  ---Calcular el Área de un Círculo---
+
+CREATE OR REPLACE FUNCTION calcular_area_circulo(radio NUMERIC)
+RETURNS NUMERIC AS $$
+    SELECT PI() * radio^2;
+$$ LANGUAGE sql;
+
+
+EJERCICIO 3  ---Contar Registros en una Tabla---
+
+CREATE OR REPLACE FUNCTION contar_registros(tabla TEXT)
+RETURNS INTEGER AS $$
+DECLARE
+    conteo INTEGER;
+BEGIN
+    EXECUTE 'SELECT COUNT(*) FROM ' || quote_ident(tabla) INTO conteo;
+    RETURN conteo;
+END;
+$$ LANGUAGE plpgsql;
+
+
+EJERCICIO 4  ---Retorne Información de un Usuario por ID---
+
+CREATE TABLE usuarios (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    correo VARCHAR(100),
+    dni VARCHAR(20),
+    telefono VARCHAR(20),
+    direccion VARCHAR(255)
+);
+
+INSERT INTO usuarios (nombre, correo, dni, telefono, direccion) VALUES
+('Juan Pérez', 'juan.perez@example.com', '12345678', '555-1234', 'Calle Falsa 123, Ciudad A'),
+('Ana López', 'ana.lopez@example.com', '87654321', '555-5678', 'Avenida Siempre Viva 456, Ciudad B'),
+('Carlos García', 'carlos.garcia@example.com', '11223344', '555-9876', 'Boulevard Principal 789, Ciudad C'),
+('María Torres', 'maria.torres@example.com', '99887766', '555-4321', 'Pasaje del Sol 321, Ciudad D');
+
+
+CREATE OR REPLACE FUNCTION obtener_usuario(user_id INT)
+RETURNS TABLE (nombre VARCHAR, correo VARCHAR) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT u.nombre, u.correo
+    FROM usuarios u
+    WHERE u.id = user_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+EJERCICIO 5 ---División con Manejo de Excepciones---
+
+CREATE OR REPLACE FUNCTION dividir(numerador NUMERIC, denominador NUMERIC)
+RETURNS NUMERIC AS $$
+DECLARE
+    resultado NUMERIC;
+BEGIN
+    IF denominador = 0 THEN
+        RAISE EXCEPTION 'División por cero no permitida';
+    END IF;
+
+    resultado := numerador / denominador;
+    RETURN resultado;
+END;
+$$ LANGUAGE plpgsql;
+
+
+EJERCICIO 6 --- Actualizar el Estado de un Pedido---
+
+CREATE TABLE pedidos (
+    id SERIAL PRIMARY KEY,
+    estado TEXT
+);
+
+INSERT INTO pedidos (estado) VALUES
+('Pendiente'),
+('Procesando'),
+('En espera'),
+('Entregado');
+
+CREATE OR REPLACE FUNCTION actualizar_estado_pedido(pedido_id INT, nuevo_estado TEXT)
+RETURNS TEXT AS $$
+BEGIN
+    UPDATE pedidos
+    SET estado = nuevo_estado
+    WHERE id = pedido_id;
+    RETURN nuevo_estado;
+END;
+$$ LANGUAGE plpgsql;
+
+
+EJERCICIO 7 ---Obtener el Pedido con Mayor Total---
+
+ALTER TABLE pedidos
+ADD COLUMN cliente_id INT,
+ADD COLUMN total NUMERIC;
+
+INSERT INTO pedidos (estado, cliente_id, total) VALUES
+('Pendiente', 101, 150.50),
+('Procesando', 102, 200.00),
+('En espera', 103, 250.75),
+('Entregado', 104, 180.00);
+
+UPDATE pedidos
+SET total = 0.00
+WHERE total IS NULL;
+
+CREATE OR REPLACE FUNCTION obtener_pedido_mayor_total()
+RETURNS TABLE (pedido_id INT, cliente_id INT, total NUMERIC) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id, p.cliente_id, p.total
+    FROM pedidos p
+    ORDER BY p.total DESC
+    LIMIT 1;
+END;
+$$ LANGUAGE plpgsql;
+
+
+EJERCICIO 8 ---Función con Parámetros por Defecto---
+
+CREATE OR REPLACE FUNCTION calcular_area_rectangulo(ancho NUMERIC DEFAULT 1, alto NUMERIC DEFAULT 1)
+RETURNS NUMERIC AS $$
+BEGIN
+    RETURN ancho * alto;
+END;
+$$ LANGUAGE plpgsql;
+
+
